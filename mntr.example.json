@@ -1,0 +1,33 @@
+{
+  "probes": [
+    {
+      "id": "probe-1",
+      "description": "Probe 1",
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://reqres.in/api/users",
+          "responseType": "json",
+          "timeout": 7000,
+          "checks": {
+            "status-200": "{{ $.statusCode === 200  }}",
+            "response-time-under-2s": "{{ $.timings.phases.total < 2000 }}"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://reqres.in/api/users/{{ $$[0].body.data[0].id }}",
+          "responseType": "json",
+          "timeout": 7000,
+          "checks": {
+            "status-200": "{{ $.statusCode === 200  }}",
+            "response-size-under-1kb": "{{ $.rawBody.byteLength < 1000  }}"
+          }
+        }
+      ],
+      "interval": 5000,
+      "incidentThreshold": 1,
+      "recoveryThreshold": 1
+    }
+  ]
+}
