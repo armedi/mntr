@@ -15,7 +15,7 @@ if (dev) {
   require('ts-node').register({ project });
 }
 
-process.env.CONFIG_FILE_PATH =
-  process.env.CONFIG_FILE_PATH || argv._[0] || './mntr.json';
+process.env.MNTR_CONFIG_FILE =
+  process.env.MNTR_CONFIG_FILE || argv._[0] || './mntr.json';
 
 require(`../${dev ? 'src' : 'dist'}`);

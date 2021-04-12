@@ -6,8 +6,12 @@ import { ZodError } from 'zod';
 type Literal = boolean | null | number | string;
 type Json = Literal | { [key: string]: Json } | Json[];
 
+const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 const jsonSchema: z.ZodSchema<Exclude<Json, Literal>> = z.lazy(() =>
-  z.union([z.array(jsonSchema), z.record(jsonSchema)])
+  z.union([
+    z.array(jsonSchema.or(literalSchema)),
+    z.record(jsonSchema.or(literalSchema)),
+  ])
 );
 
 const methodSchema = z.enum([
@@ -49,17 +53,35 @@ const probeSchema = z.object({
   id: z.any().transform((val) => String(val)),
   name: z.string().optional(),
   description: z.string().optional(),
-  interval: z.number().default(10),
+  interval: z.number().default(60000),
   requests: requestOptionsSchema.array(),
 });
 
 export type Probe = z.infer<typeof probeSchema>;
 
+const notificationSchema = z.object({
+  id: z.any().transform((val) => String(val)),
+  type: z.enum(['webhook']).default('webhook'),
+  request: requestOptionsSchema.pick({
+    method: true,
+    url: true,
+    headers: true,
+    body: true,
+    json: true,
+    searchParams: true,
+  }),
+});
+
+export type Notification = z.infer<typeof notificationSchema>;
+
 const configSchema = z.object({
-  probes: probeSchema.array(),
+  probes: probeSchema.array().default([]),
+  notifications: notificationSchema.array().default([]),
 });
 
 export type Config = z.infer<typeof configSchema>;
+
+export const emptyConfig: Config = { probes: [], notifications: [] };
 
 export const parse = (filepath: string) => {
   const json = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
