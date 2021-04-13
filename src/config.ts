@@ -49,7 +49,7 @@ const requestOptionsSchema = z.object({
 
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 
-const probeSchema = z.object({
+const probeOptionsSchema = z.object({
   id: z.any().transform((val) => String(val)),
   name: z.string().optional(),
   description: z.string().optional(),
@@ -57,9 +57,9 @@ const probeSchema = z.object({
   requests: requestOptionsSchema.array(),
 });
 
-export type Probe = z.infer<typeof probeSchema>;
+export type ProbeOptions = z.infer<typeof probeOptionsSchema>;
 
-const notificationSchema = z.object({
+const notificationOptionsSchema = z.object({
   id: z.any().transform((val) => String(val)),
   type: z.enum(['webhook']).default('webhook'),
   request: requestOptionsSchema.pick({
@@ -72,11 +72,11 @@ const notificationSchema = z.object({
   }),
 });
 
-export type Notification = z.infer<typeof notificationSchema>;
+export type NotificationOptions = z.infer<typeof notificationOptionsSchema>;
 
 const configSchema = z.object({
-  probes: probeSchema.array().default([]),
-  notifications: notificationSchema.array().default([]),
+  probes: probeOptionsSchema.array().default([]),
+  notifications: notificationOptionsSchema.array().default([]),
 });
 
 export type Config = z.infer<typeof configSchema>;

@@ -1,13 +1,5 @@
 import chokidar from 'chokidar';
-import {
-  fromEvent,
-  merge,
-  of,
-  combineLatest,
-  timer,
-  Observable,
-  Subject,
-} from 'rxjs';
+import { fromEvent, merge, of, combineLatest, timer, Subject } from 'rxjs';
 import {
   map,
   catchError,
@@ -25,8 +17,7 @@ import { Response } from 'got';
 import _ from 'lodash';
 
 import { parse, formatErrorMessage, emptyConfig } from './config';
-import { checkResponse, httprequest } from './httprequest';
-import { renderTemplate } from './helpers/string';
+import { countChecks, probe } from './probe';
 
 export const main = (filepath: string) => {
   const configFileWatcher = chokidar.watch(filepath);
@@ -77,71 +68,8 @@ export const main = (filepath: string) => {
     ),
     mergeAll(),
     pluck(0),
-    // do probing
-    switchMap(({ id, requests }) => {
-      return new Observable<{
-        probeId: string;
-        requestIndex: number;
-        response: Response<any> | null;
-        checks: Record<string, boolean>;
-      }>((subscriber) => {
-        (async () => {
-          let responses = [];
-
-          for (let i = 0; i < requests.length; i++) {
-            const { checks: checkList, ...rest } = requests[i];
-
-            const requestOptions: typeof rest = renderTemplate(rest, {
-              $$: responses,
-            });
-            const response = await httprequest(requestOptions).catch(
-              () => null
-            );
-            const checks = checkResponse(checkList, response);
-
-            subscriber.next({
-              probeId: id,
-              requestIndex: i,
-              response: response,
-              checks,
-            });
-
-            if (!response || Object.values(checks).some((v) => v === false))
-              break;
-
-            responses.push(response);
-          }
-          subscriber.complete();
-        })();
-      });
-    }),
-    // record number of consecutive OK or FAILURE for each check condition
-    map((response) => {
-      const key = `${response.probeId}_${response.requestIndex}`;
-
-      if (!checksRecord.has(key)) {
-        checksRecord.set(
-          key,
-          Object.keys(response.checks).reduce((acc, k) => {
-            acc[k] = 0;
-            return acc;
-          }, {} as Record<string, number>)
-        );
-      }
-
-      const checks = checksRecord.get(key)!;
-
-      Object.entries(response.checks).forEach(([k, v]) => {
-        // positif value is for consecutive OK
-        // negative value is for consecutive FAILURE
-        checks[k] = v ? Math.max(checks[k], 0) + 1 : Math.min(checks[k], 0) - 1;
-      });
-
-      return {
-        ...response,
-        checks: Object.assign({}, checks),
-      };
-    }),
+    switchMap(probe),
+    map(countChecks(checksRecord)),
     multicast(requestSubject),
     refCount()
   );
