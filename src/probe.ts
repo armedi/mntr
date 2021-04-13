@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { ProbeOptions } from './config';
-import { renderTemplate } from './helpers/string';
-import { httpRequest, Response } from './httpRequest';
+import { renderTemplate } from './utils/template';
+import { httpRequest, Response } from './utils/httpRequest';
 
 type ProbeResult = {
   probeId: string;
