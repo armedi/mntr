@@ -55,6 +55,8 @@ const probeOptionsSchema = z.object({
   description: z.string().optional(),
   interval: z.number().default(60000),
   requests: requestOptionsSchema.array(),
+  incidentThreshold: z.number().default(3),
+  recoveryThreshold: z.number().default(3),
 });
 
 export type ProbeOptions = z.infer<typeof probeOptionsSchema>;

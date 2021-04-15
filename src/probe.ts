@@ -40,9 +40,14 @@ export const probe = ({ id, requests }: ProbeOptions) => {
   });
 };
 
-export const countChecks = (
-  checksRecord: Map<string, Record<string, number>>
-) => (response: ProbeResult) => {
+export type CountedChecks = ReturnType<ReturnType<typeof countChecks>>;
+export type ChecksRecord = Map<string, Record<string, number>>;
+
+// There is a side effect of checksRecord mutation here
+// TODO: refactor to remove side effect
+export const countChecks = (checksRecord: ChecksRecord) => (
+  response: ProbeResult
+) => {
   const key = `${response.probeId}_${response.requestIndex}`;
 
   if (!checksRecord.has(key)) {

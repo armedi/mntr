@@ -1,28 +1,30 @@
 import chokidar from 'chokidar';
-import { fromEvent, merge, of, combineLatest, timer, Subject } from 'rxjs';
+import { combineLatest, fromEvent, merge, of, Subject, timer } from 'rxjs';
 import {
-  map,
   catchError,
-  pluck,
+  filter,
+  map,
   mergeAll,
+  mergeMap,
+  multicast,
+  pluck,
+  refCount,
+  startWith,
   switchMap,
   takeUntil,
   tap,
-  startWith,
-  multicast,
-  refCount,
 } from 'rxjs/operators';
 import { ZodError } from 'zod';
-import { Response } from 'got';
 import _ from 'lodash';
 
-import { parse, formatErrorMessage, emptyConfig } from './config';
-import { countChecks, probe } from './probe';
+import { Config, emptyConfig, formatErrorMessage, parse } from './config';
+import { ChecksRecord, countChecks, CountedChecks, probe } from './probe';
+import { createAlert, LastAlerts, shouldSendAlert } from './alert';
 
 export const main = (filepath: string) => {
   const configFileWatcher = chokidar.watch(filepath);
 
-  const configSubject = new Subject<ReturnType<typeof parse>>();
+  const configSubject = new Subject<Config>();
 
   const config$ = merge(
     fromEvent<[string]>(configFileWatcher, 'add').pipe(pluck(0)),
@@ -45,16 +47,10 @@ export const main = (filepath: string) => {
     refCount()
   );
 
-  const checksRecord = new Map<string, Record<string, number>>();
-
+  const checksRecord: ChecksRecord = new Map();
   config$.subscribe(() => checksRecord.clear());
 
-  const requestSubject = new Subject<{
-    probeId: string;
-    requestIndex: number;
-    response: Response<any> | null;
-    checks: Record<string, number>; // number of consecutive OK or FAILURE
-  }>();
+  const requestSubject = new Subject<CountedChecks>();
 
   const request$ = config$.pipe(
     pluck('probes'),
@@ -74,7 +70,23 @@ export const main = (filepath: string) => {
     refCount()
   );
 
-  request$.subscribe((result) => {
-    console.log(_.omit(result, 'response'));
-  });
+  const lastAlerts: LastAlerts = new Map();
+  config$.subscribe(() => lastAlerts.clear());
+
+  const alert$ = combineLatest([
+    config$,
+    request$.pipe(
+      mergeMap((req) =>
+        Object.entries(req.checks).map((check) => ({
+          ..._.omit(req, 'checks'),
+          check,
+        }))
+      )
+    ),
+  ]).pipe(
+    map((args) => createAlert(...args)),
+    filter(shouldSendAlert(lastAlerts))
+  );
+
+  alert$.subscribe(console.log);
 };
