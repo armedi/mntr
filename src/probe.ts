@@ -3,6 +3,8 @@ import { ProbeOptions } from './config';
 import { renderTemplate } from './utils/template';
 import { httpRequest, Response } from './utils/httpRequest';
 
+export { ProbeOptions } from './config';
+
 type ProbeResult = {
   probeId: string;
   requestIndex: number;

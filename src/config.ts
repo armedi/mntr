@@ -61,18 +61,30 @@ const probeOptionsSchema = z.object({
 
 export type ProbeOptions = z.infer<typeof probeOptionsSchema>;
 
-const notificationOptionsSchema = z.object({
-  id: z.any().transform((val) => String(val)),
-  type: z.enum(['webhook']).default('webhook'),
+const webhookSchema = z.object({
+  type: z.literal('webhook'),
   request: requestOptionsSchema.pick({
     method: true,
     url: true,
     headers: true,
-    body: true,
-    json: true,
     searchParams: true,
   }),
 });
+
+export type WebhookNotification = z.infer<typeof webhookSchema>;
+
+const ifftttWebhookSchema = z.object({
+  type: z.literal('ifttt-webhook'),
+  request: requestOptionsSchema.pick({ url: true }),
+});
+
+export type IFTTTWebhook = z.infer<typeof ifftttWebhookSchema>;
+
+const notificationOptionsSchema = z
+  .object({
+    id: z.any().transform((val) => String(val)),
+  })
+  .and(z.union([webhookSchema, ifftttWebhookSchema]));
 
 export type NotificationOptions = z.infer<typeof notificationOptionsSchema>;
 

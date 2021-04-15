@@ -1,8 +1,10 @@
-import { Config } from './config';
+import { ProbeOptions } from './probe';
 import { Response } from './utils/httpRequest';
 
+export type Alert = ReturnType<typeof createAlert>;
+
 export const createAlert = (
-  config: Config,
+  probes: ProbeOptions[],
   request: {
     check: [string, number];
     probeId: string;
@@ -10,7 +12,7 @@ export const createAlert = (
     response: Response<any> | null;
   }
 ) => {
-  const probe = config.probes.find((probe) => probe.id === request.probeId)!;
+  const probe = probes.find((probe) => probe.id === request.probeId)!;
 
   return {
     probe: probe,

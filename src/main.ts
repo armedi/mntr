@@ -20,6 +20,7 @@ import _ from 'lodash';
 import { Config, emptyConfig, formatErrorMessage, parse } from './config';
 import { ChecksRecord, countChecks, CountedChecks, probe } from './probe';
 import { createAlert, LastAlerts, shouldSendAlert } from './alert';
+import { sendNotifications } from './notification';
 
 export const main = (filepath: string) => {
   const configFileWatcher = chokidar.watch(filepath);
@@ -74,7 +75,7 @@ export const main = (filepath: string) => {
   config$.subscribe(() => lastAlerts.clear());
 
   const alert$ = combineLatest([
-    config$,
+    config$.pipe(pluck('probes')),
     request$.pipe(
       mergeMap((req) =>
         Object.entries(req.checks).map((check) => ({
@@ -88,5 +89,10 @@ export const main = (filepath: string) => {
     filter(shouldSendAlert(lastAlerts))
   );
 
-  alert$.subscribe(console.log);
+  combineLatest([config$.pipe(pluck('notifications')), alert$]).subscribe(
+    (args) => {
+      console.log(args[1]);
+      sendNotifications(...args);
+    }
+  );
 };
