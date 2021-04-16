@@ -13,6 +13,7 @@ import {
   switchMap,
   takeUntil,
   tap,
+  withLatestFrom,
 } from 'rxjs/operators';
 import { ZodError } from 'zod';
 import _ from 'lodash';
@@ -74,25 +75,22 @@ export const main = (filepath: string) => {
   const lastAlerts: LastAlerts = new Map();
   config$.subscribe(() => lastAlerts.clear());
 
-  const alert$ = combineLatest([
-    config$.pipe(pluck('probes')),
-    request$.pipe(
-      mergeMap((req) =>
-        Object.entries(req.checks).map((check) => ({
-          ..._.omit(req, 'checks'),
-          check,
-        }))
-      )
+  const alert$ = request$.pipe(
+    mergeMap((req) =>
+      Object.entries(req.checks).map((check) => ({
+        ..._.omit(req, 'checks'),
+        check,
+      }))
     ),
-  ]).pipe(
+    withLatestFrom(config$.pipe(pluck('probes'))),
     map((args) => createAlert(...args)),
     filter(shouldSendAlert(lastAlerts))
   );
 
-  combineLatest([config$.pipe(pluck('notifications')), alert$]).subscribe(
-    (args) => {
-      console.log(args[1]);
+  alert$
+    .pipe(withLatestFrom(config$.pipe(pluck('notifications'))))
+    .subscribe((args) => {
+      console.log(args[0]);
       sendNotifications(...args);
-    }
-  );
+    });
 };

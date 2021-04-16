@@ -4,13 +4,13 @@ import { Response } from './utils/httpRequest';
 export type Alert = ReturnType<typeof createAlert>;
 
 export const createAlert = (
-  probes: ProbeOptions[],
   request: {
     check: [string, number];
     probeId: string;
     requestIndex: number;
     response: Response<any> | null;
-  }
+  },
+  probes: ProbeOptions[]
 ) => {
   const probe = probes.find((probe) => probe.id === request.probeId)!;
 

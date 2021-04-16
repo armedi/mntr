@@ -6,8 +6,8 @@ import { httpRequest } from './utils/httpRequest';
 export { NotificationOptions } from './config';
 
 export const sendNotifications = (
-  notifications: NotificationOptions[],
-  alert: Alert
+  alert: Alert,
+  notifications: NotificationOptions[]
 ) => {
   notifications.forEach((notif) => {
     if (notif.type === 'ifttt-webhook') {
