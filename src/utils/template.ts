@@ -1,4 +1,5 @@
 import { render } from 'micromustache';
+import { compileExpression } from 'filtrex';
 
 export const renderTemplate = (
   val: unknown,
@@ -22,9 +23,9 @@ export const renderTemplate = (
   return val;
 };
 
-export const evaluate = (expr: string): boolean => {
-  // TODO: change to safe evaluation which only evaluate simple comparation
-  // allowed operators: <, <=, ==, >, >=
-
-  return eval(expr);
+export const evaluate = (
+  expr: string,
+  data: Record<string, unknown>
+): boolean => {
+  return Boolean(compileExpression(expr.toLowerCase())(data));
 };

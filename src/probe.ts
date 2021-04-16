@@ -84,7 +84,11 @@ export const checkResponse = (
   if (response) {
     responseChecks = Object.entries(checks).map(([k, v]) => [
       k,
-      evaluate(renderTemplate(v, { $: response })),
+      evaluate(renderTemplate(v, { $: response }), {
+        status: response.statusCode,
+        response_size: response.rawBody.byteLength,
+        response_time: response.timings.phases.total,
+      }),
     ]);
 
     return responseChecks.reduce((acc, [k, v]) => {

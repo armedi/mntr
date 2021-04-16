@@ -15,6 +15,7 @@
   "author": "Armedi",
   "dependencies": {
     "chokidar": "^3.5.1",
+    "filtrex": "^2.1.0",
     "got": "^11.8.2",
     "lodash": "^4.17.21",
     "micromustache": "^8.0.3",

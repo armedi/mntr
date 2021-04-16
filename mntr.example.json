@@ -20,8 +20,7 @@
           "responseType": "json",
           "timeout": 7000,
           "checks": {
-            "status-200": "{{ $.statusCode === 200  }}",
-            "response-time-under-2s": "{{ $.timings.phases.total < 2000 }}"
+            "healthy": "STATUS == 200 and RESPONSE_TIME < 1000"
           }
         },
         {
@@ -30,8 +29,8 @@
           "responseType": "json",
           "timeout": 7000,
           "checks": {
-            "status-200": "{{ $.statusCode === 200  }}",
-            "response-size-under-1kb": "{{ $.rawBody.byteLength < 1024  }}"
+            "status-200": "STATUS == 200",
+            "response-size-under-1kb": "RESPONSE_SIZE < 1000"
           }
         }
       ],
