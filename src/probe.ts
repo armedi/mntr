@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { ProbeOptions } from './config';
-import { renderTemplate } from './utils/template';
+import { evaluate, renderTemplate } from './utils/template';
 import { httpRequest, Response } from './utils/httpRequest';
 
 export { ProbeOptions } from './config';
@@ -84,7 +84,7 @@ export const checkResponse = (
   if (response) {
     responseChecks = Object.entries(checks).map(([k, v]) => [
       k,
-      renderTemplate(v, { $: response }) === 'true' ? true : false,
+      evaluate(renderTemplate(v, { $: response })),
     ]);
 
     return responseChecks.reduce((acc, [k, v]) => {

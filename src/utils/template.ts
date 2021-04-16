@@ -1,6 +1,4 @@
-import _ from 'lodash';
-
-_.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
+import { render } from 'micromustache';
 
 export const renderTemplate = (
   val: unknown,
@@ -18,8 +16,15 @@ export const renderTemplate = (
   }
 
   if (typeof val === 'string') {
-    return _.template(val)(data);
+    return render(val, data);
   }
 
   return val;
+};
+
+export const evaluate = (expr: string): boolean => {
+  // TODO: change to safe evaluation which only evaluate simple comparation
+  // allowed operators: <, <=, ==, >, >=
+
+  return eval(expr);
 };

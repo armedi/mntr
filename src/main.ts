@@ -90,7 +90,7 @@ export const main = (filepath: string) => {
   alert$
     .pipe(withLatestFrom(config$.pipe(pluck('notifications'))))
     .subscribe((args) => {
-      console.log(args[0]);
+      console.log(_.omit(args[0], 'response'));
       sendNotifications(...args);
     });
 };
