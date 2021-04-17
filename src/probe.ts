@@ -5,10 +5,14 @@ import { httpRequest, Response } from './utils/httpRequest';
 
 export { ProbeOptions } from './config';
 
-type ProbeResult = {
+export type ProbeResult = {
   probeId: string;
   requestIndex: number;
-  response: Response<any> | null;
+  response: {
+    status_code: number;
+    response_size: number;
+    response_time?: number;
+  } | null;
   checks: Record<string, boolean>;
 };
 
@@ -24,12 +28,17 @@ export const probe = ({ id, requests }: ProbeOptions) => {
           $$: responses,
         });
         const response = await httpRequest(requestOptions).catch(() => null);
-        const checks = checkResponse(checkList, response);
+        const response_ = response && {
+          status_code: response.statusCode,
+          response_size: response.rawBody.byteLength,
+          response_time: response.timings.phases.total,
+        };
+        const checks = checkResponse(checkList, response_);
 
         subscriber.next({
           probeId: id,
           requestIndex: i,
-          response: response,
+          response: response_,
           checks,
         });
 
@@ -76,19 +85,15 @@ export const countChecks = (checksRecord: ChecksRecord) => (
   };
 };
 
-export const checkResponse = (
+const checkResponse = (
   checks: Record<string, string>,
-  response: Response<any> | null
+  response: ProbeResult['response'] | null
 ) => {
   let responseChecks: Array<[string, boolean]> | null = null;
   if (response) {
     responseChecks = Object.entries(checks).map(([k, v]) => [
       k,
-      evaluate(renderTemplate(v, { $: response }), {
-        status: response.statusCode,
-        response_size: response.rawBody.byteLength,
-        response_time: response.timings.phases.total,
-      }),
+      evaluate(v, response),
     ]);
 
     return responseChecks.reduce((acc, [k, v]) => {

@@ -20,7 +20,7 @@
           "responseType": "json",
           "timeout": 7000,
           "checks": {
-            "healthy": "STATUS == 200 and RESPONSE_TIME < 1000"
+            "healthy": "STATUS_CODE == 200 and RESPONSE_TIME < 1000"
           }
         },
         {
@@ -29,7 +29,7 @@
           "responseType": "json",
           "timeout": 7000,
           "checks": {
-            "status-200": "STATUS == 200",
+            "status-200": "STATUS_CODE == 200",
             "response-size-under-1kb": "RESPONSE_SIZE < 1000"
           }
         }

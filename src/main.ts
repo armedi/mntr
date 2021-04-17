@@ -18,6 +18,7 @@ import {
 import { ZodError } from 'zod';
 import _ from 'lodash';
 
+import { renderUI } from './ui';
 import { Config, emptyConfig, formatErrorMessage, parse } from './config';
 import { ChecksRecord, countChecks, CountedChecks, probe } from './probe';
 import { createAlert, LastAlerts, shouldSendAlert } from './alert';
@@ -90,7 +91,10 @@ export const main = (filepath: string) => {
   alert$
     .pipe(withLatestFrom(config$.pipe(pluck('notifications'))))
     .subscribe((args) => {
-      console.log(_.omit(args[0], 'response'));
       sendNotifications(...args);
     });
+
+  combineLatest([config$, request$]).subscribe(([config, request]) => {
+    renderUI(request);
+  });
 };

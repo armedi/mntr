@@ -1,4 +1,4 @@
-import { ProbeOptions } from './probe';
+import { ProbeOptions, ProbeResult } from './probe';
 import { Response } from './utils/httpRequest';
 
 export type Alert = ReturnType<typeof createAlert>;
@@ -8,7 +8,7 @@ export const createAlert = (
     check: [string, number];
     probeId: string;
     requestIndex: number;
-    response: Response<any> | null;
+    response: ProbeResult['response'] | null;
   },
   probes: ProbeOptions[]
 ) => {
